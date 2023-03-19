@@ -1,0 +1,246 @@
+1. Cài Centos 7
+- Tải CentOS-7-x86_64-Minimal-2009.iso
+Vào link http://mirrors.viettelidc.com.vn/centos/7/isos/x86_64/
+Khi tải thì phiên bản của centos 7 là mới nhất
+* Khởi động Vmware lên
+- Chọn file - New Machine
+- Chọn Custom
+- Chọn I will install the operating system later
+- Next
+- Chọn Linux
+- Chọn Version : Centos 7 64bit
+- Đặt tên và Chọn nơi cài
+- Chọn Processor thêm nếu máy mạnh
+- Chọn RAM 4GB
+- Đánh dấu Bridge – để có thể update thư viện nhanh
+- Next- Next
+- Chọn Create New virtual
+- Chọn dung lượng 30 GB -tuỳ theo dung lượng máy bạn 
+- Chọn Store …single file
+- Chọn lại vị trí cài – Next
+- Custome Hardware – bỏ bớt những cái ko cần – Finish
+- Trở ra màn hình
+- Chuột phải vào máy ảo mới tạo – Settings
+- Vào CD/DVD : click vào use ISO để chọn file ISO của CENTOS 7 – Nhấn OK
+-------------------------------------------
+- Làm theo video
+Khi cài xong, khởi động lại
+- Đăng nhập với password lúc nãy
+Có thể tắt Selinux 
+sestatus – xem status selinux
+vi /etc/selinux/config
+reboot
+Chỉnh enforce thành disabled
+
+* Chạy các lệnh sau để cài thư viện
+- yum update
+Nếu chỗ này báo lỗi thì ta sẽ install lại cái file .repo để nó
+có thể truy cập mạng tải update
+cp -pr /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.OLD
+sau đó
+vi /etc/yum.repos.d/CentOS-Base.repo
+Chỉnh lại chỗ các dòng #baseurl=….
+Đổi thành baseurl=….
+Chỗ này hơi dài dòng
+Chỗ [base]
+- Thay nguyên cái dòng baseurl cũ thành
+baseurl=http://mirrors.viettelidc.com.vn/centos/7 /os/$basearch/
+Chỗ [updates]
+- Thay nguyên dòng baseurl
+baseurl=http://mirrors.viettelidc.com.vn/centos/7/updates/$basearch/
+Chỗ [extras]
+baseurl=http://mirrors.viettelidc.com.vn/centos/7/extras/$basearch/
+Nếu có [contribute]
+Thì xoá hết
+Nhấn Esc
+- nhập “:x” bằng bàn phím, sau đó nhấn Enter để lưu
+Trở lại
+yum update => nó sẽ chạy ok
+- yum install libuuid.i686
+- yum install libcrypto.so.6
+- yum install libstdc++.so.6
+* Cài mysql – centos 7
+Chạy lệnh
+yum install mysql
+Nếu sau khi chạy “ yum install mysql “
+Mà chỉ có mariadb
+Muốn cài mysql-server
+yum install wget – cài đặt wget để tải mysql-server
+wget http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm 
+	Cái này là tải mysql package
+sudo rpm -ivh mysql-community-release-el7-5.noarch.rpm
+yum install mysql-server
+systemctl start mysqld
+systemctl status mysqld
+
+* Cấu hình mật khẩu cho mysql (mặc định là 1234560123)
+- mysql_secure_installation
+- Nhấn Enter 
+- Nhấn Y
+- Đặt mật khẩu 1234560123
+- Nhập lại 
+- Chọn Y
+- Chọn n
+- Chọn y rồi y
+* Cho mysql tự động chạy khi khởi động
+- systemctl enable mysqld.service (centos 7)
+
+* Mở port
+firewall-cmd --zone=public --add-port=5622/tcp --permanent
+firewall-cmd --zone=public --add-port=5623/tcp --permanent
+firewall-cmd --zone=public --add-port=5632/tcp --permanent
+firewall-cmd --zone=public --add-port=6666/tcp --permanent
+firewall-cmd --zone=public --add-port=3306/tcp --permanent
+firewall-cmd --reload
+
+* Tạo Database server1
+- Nhập 
+mysql -uroot -p
+mật khẩu 1234560123
+hoặc 
+mysql -uroot -p1234560123
+
+CREATE DATABASE server1;
+SHOW DATABASES;
+
+* Chép file vào CENTOS
+- Dùng WINSCP chép file jxser đã có vào thư mục /home/
+- Làm theo video
+* Chỉnh IP cho centos
+- Sau khi cài đặt xong CENTOS, khởi động
+- Mở và edit 
+Lúc mới cài
+Có phần chọn network lúc này bạn phải nhớ cái tên 
+Card mạng
+Ở Centos 6 thường là eth0
+Còn Centos 7 thì tuỳ vào máy của bạn
+-	Ở đây của tui là ens32
+* Nếu làm thủ công
+vi /etc/sysconfig/network-scripts/ifcfg-ens32
+Nhất phím I để chỉnh sửa
+Từ chỗ Chỉnh và thêm thông số sau
+IPADDR=192.168.1.100
+GATEWAY=192.168.1.1
+NETMASK=255.255.255.0
+Nhấn ESC
+Đánh :x rồi nhấn ENTER để lưu file
+* Sử dụng NetworkManager-tui để chỉnh (có giao diện)
+nmcli -p dev – hiển thị các card mạng của centos đang chạy
+yum install NetworkManager-tui -y  => cài đặt 
+Vào
+vi /etc/sysconfig/network-scripts/ifcfg-ens32
+để thêm 
+NM_CONTROLLED=yes
+ESC , :x để lưu
+ở đây là ens32
+systemctl restart NetworkManager.service
+hoặc
+systemctl start NetworkManager.service
+nmtui edit ens32
+
+Giao diện chỉnh sửa, sử dụng tab, enter mũi tên lên xuống để edit
+Sau đó nhấn ok
+systemctl restart network
+
+Khởi động lại CENTOS
+Lúc này ta có thể sử dụng WINSCP để kết nối Linux để chép file jxser
+
+* Chỉnh các thông số IP trong thư mục gateway và server1
+- Như file jxser mặc định đã để IP giống với IP khi config card mạng CENTOS 6 lúc đầu.
+Các file goddess.cfg
+Ngay chổ InternetIP chỉnh thành IP của CENTOS (192.168.1.100)
+bishop.cfg
+- Ngay chổ AccSvrIP = 192.168.1.200 (IP của máy ảo WIN)
+- Còn cái mac-address thì khi nào làm online sẽ chỉnh theo địa chỉ MAC của máy WIN và CENTOS riêng
+- Ngay chổ InternetIP chỉnh thành IP của CENTOS (192.168.1.100)
+relay_config.ini
+[root]
+Address = 192.168.1.200 (IP của máy ảo WIN)
+
+[FixIP]
+InternetIP = 192.168.1.100 (IP của máy ảo CENTOS)
+
+server.cfg cũng chỉnh y vậy
+- Có thể download tool nhỏ để auto config mấy cái IP
+
+2. Edit WIN 7
+* Chú ý phần tên khi đăng nhập sql (Windows Authentication)
+- của tui là VIP-SERVER
+* Attach Database
+- Để sẵn 1 file account_tong.MDF
+- Start-Program-Enterprise Manager
+- Làm theo video để attach database
+- Vào phần Security-Login - sa
+- Chỉnh password thành 1234560123
+* Chỉnh file trong thư mục Pays – dùng GMPassGen.exe mã hoá
+- Mở database.ini
+- Lúc nãy có tên server là VIP-SERVER
+- Chạy GMPassGen
+- Copy VIP-SERVER dán vào 2 ô – nhấn Convert
+- Copy mã hoá đã convert
+- Chép vào chỗ server trong file database.ini 
+Do file tui tải về
+-	Cái phần mã hoá user rồi password (sa) nếu khi chạy báo lỗi kết nối thì dùng GMGenPass để mã hoá lại
+-	Nếu ko lỗi thì để y
+* Tắt firewall
+- Vào control panel
+- Chọn biểu tượng có chữ Windows Firewall
+- Turn off hết dấu chọn
+- Khởi động lại máy win
+* Chạy server
+Chuột phải vào file S3RelayServer_Y chọn Send to desktop
+Tương tự với file Sword3paysys
+Đặt tên 1 cho S3RelayServer_Y, 2 cho Sword3…
+Chạy 1
+Chạy 2
+Mở SecureCRT 
+Kết nối
+Chạy 1, 2, 3, S1
+
+Nếu lúc khởi động server báo lỗi libuuid.so.1
+Vào máy ảo centos đánh lệnh
+- yum install libuuid.so.1 
+Sau đó chạy lại lệnh khởi động server bên máy ảo win 7
+Kiểm tra lại toàn bộ thông tin user mật khẩu địa chỉ ip trên các file b_shop
+-------------------------------------------------------
+Check kỹ thông số các file trên server  jxser/ bishop.cfg, goddess.cfg.
+Jxser/s3relay/relay_config.ini.
+Server1/serverconfig.ini để ý port của gameserver 6666 đã mở chưa
+Trên client để ý ip trong 
+Config.cfg
+setting/serverlist.cfg
+
+
+
+Câu lệnh nén và giải nén
+tar czvf jxser.tar.gz /home
+tar xzvf jxser.tar.gz
+
+192.168.1.200
+cR5z4CLi8F3WRANbBTBQi0AibqQWlCLE
+----------------------------------------------------
+Pass DB
+Frank@123
+NqT_SLo8W06YqLDBG08NANiT61MvUYSC
+7B747E1BE2F9F67F66B67D8867084DCB
+---------------------------------------------------
+‎00-0c-29-5d-96-b7
+000c-295d-96b7
+-------------------------------
+Pass DB
+1234560123
+jbE0DzyyHXbJbHhWBsr10f0AYrugtNMB
+2DED8D3658DADD08723835C618FAAAAF
+mysqlcheck -uroot -p --repair --all-databases
+service mysqld stop
+service mysqld start
+
+xóa mysql trên centos 7
+
+B1: Đầu tiên chúng ta cần làm là backup toàn bộ dữ liệu đang có trong Mysql ra
+# mysqldump -u root -p –all-databases > /tmp/backup-all-db.sql
+B2: Tiếp, gỡ các gói cài đặt Mysql
+# service mysqld stop
+# cp /etc/my.cnf /tmp/
+# yum remove mysql*
+
